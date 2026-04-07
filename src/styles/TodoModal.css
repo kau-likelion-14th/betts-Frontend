@@ -1,0 +1,171 @@
+.todo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.todo-modal {
+  width: 560px;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 36px 40px 30px;
+  box-sizing: border-box;
+  font-family: "Paperlogy", sans-serif;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+}
+
+.todo-modal-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 34px;
+}
+
+.todo-modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1f1f1f;
+}
+
+.todo-modal-close-btn {
+  position: absolute;
+  left: 0;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: #222;
+  padding: 0;
+}
+
+.todo-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.todo-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.todo-modal-field label {
+  font-size: 18px;
+  font-weight: 800;
+  color: #222;
+}
+
+.modal-category-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.modal-category-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.modal-category-item span {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.modal-category-item.study span {
+  color: #222;
+}
+
+.modal-category-item.exercise span {
+  color: #e28b7a;
+}
+
+.modal-category-item.club span {
+  color: #6a9edc;
+}
+
+.modal-category-item input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #2f80ed;
+  cursor: pointer;
+}
+
+.todo-modal-field input[type="text"] {
+  width: 100%;
+  height: 64px;
+  border: none;
+  outline: none;
+  border-radius: 18px;
+  background: #f3f3f3;
+  padding: 0 20px;
+  box-sizing: border-box;
+  font-size: 18px;
+  font-family: inherit;
+  color: #222;
+}
+
+.todo-modal-field input[type="text"]::placeholder {
+  color: #9a9a9a;
+}
+
+.routine-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 800;
+  color: #222;
+  cursor: pointer;
+  padding-top: 4px;
+}
+
+.routine-link-arrow {
+  font-size: 24px;
+  color: #a0a0a0;
+  line-height: 1;
+}
+
+.todo-modal-footer {
+  display: flex;
+  gap: 16px;
+  margin-top: 34px;
+}
+
+.todo-delete-btn,
+.todo-save-btn {
+  flex: 1;
+  height: 64px;
+  border-radius: 22px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.todo-delete-btn {
+  background: #ffffff;
+  border: 2px solid #f4b4b4;
+  color: #f19a9a;
+}
+
+.todo-save-btn {
+  background: #9dc6f2;
+  border: none;
+  color: white;
+}
+
+.todo-save-btn.active {
+  background: #2f80ed;
+}
