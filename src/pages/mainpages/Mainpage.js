@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import CustomCalendar from "./Calendar";
 import Todo from "./Todo";
-import "../../styles/Mainpage.css";
+import "../../styles/MyPage.css";
 
 const toDateKey = (date) => { // 날짜 객체를 "YYYY-MM-DD" 문자열로 바꾸는 함수 (달력과 Todo가 같은 키를 쓰기 위함)
   const y = date.getFullYear();
