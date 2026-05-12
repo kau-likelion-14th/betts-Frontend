@@ -2,11 +2,11 @@ import React from 'react';
 import './App.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import MainPage from './Pages/Mainpages/Mainpages';
-import LoginPage from './Pages/LoginPage/Loginpage';
-import FriendPage from './Pages/FriendPage/FriendPage';
-import FriendDetailPage from './Pages/FriendPage/FriendDetailPage';
-import MyPage from './Pages/Mypages/Mypage';
+import MainPage from './pages/mainpages/Mainpages';
+import LoginPage from './pages/Loginpage/Loginpage';
+import FriendPage from './pages/FriendPage/FriendPage';
+import FriendDetailPage from './pages/FriendPage/FriendDetailPage';
+import MyPage from './pages/Mypages/Mypage';
 // Routes: 경로에 따라 다른 컴포넌트를 렌더링하는 컨테이너
 // Route: 특정 path와 일치할 때 보여줄 컴포넌트를 지정
 // useLocation: 현재 URL 정보를 가져오는 훅
