@@ -1,6 +1,5 @@
 import "../styles/Footer.css";
 import ltelogo from "../assets/image/logo.png";
-import { NavLink } from "react-router-dom";
 
 function Footer() {
     return(
