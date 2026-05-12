@@ -80,8 +80,8 @@ function FriendPage(){
         <div className= "friend-page">
             <div className= "friend-page__inner">
                 <div className= "friend-page__grid">
-                    <FriendList 
-                    followList={followList}
+                    <FriendList
+                    friends={followList}
                     onClickRemove = {handleClickRemove}
                     emptyText = "팔로우하는 친구가 없습니다."
                     />
