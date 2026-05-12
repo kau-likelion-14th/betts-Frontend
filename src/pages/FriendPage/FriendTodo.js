@@ -1,5 +1,4 @@
-// useMemo: 의존성 배열의 값이 바뀔 때만 값을 재계산하는 훅 → 불필요한 연산 방지
-import React, { useMemo } from "react";
+import React from "react";
 
 import "../../styles/Todo.css";
 import "../../styles/FriendTodo.css";
@@ -27,15 +26,6 @@ const FriendTodo = ({ title = "To do List" }) => {
   // 더미 데이터를 그대로 사용 (추후 props로 교체 가능)
   const todos = dummyTodos;
   const categories = dummyCategories;
-
-  // todos 배열이 바뀔 때만 전체 개수(total)와 완료 개수(done)를 재계산
-  // filter로 completed가 true인 항목만 추려서 완료 개수 산출
-  // 현재 UI에 직접 사용되지 않지만 향후 진행률 표시 등에 활용 가능
-  const counts = useMemo(() => {
-    const total = todos.length;
-    const done = todos.filter((t) => t.completed).length;
-    return { total, done };
-  }, [todos]);
 
   return (
     <div className="friend-todo">

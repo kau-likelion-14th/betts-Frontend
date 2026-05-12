@@ -85,9 +85,7 @@ function FriendDetailPage() {
   const [savedSongs] = useState(dummySavedSongs);
 
   // selectedDate: 캘린더에서 선택한 날짜 → 해당 날짜의 투두를 todos에 반영
-  // viewDate: 현재 캘린더에 보이는 월 (월 이동 시 업데이트)
   const [selectedDate, setSelectedDate] = useState(new Date("2026-05-04"));
-  const [viewDate, setViewDate] = useState(new Date("2026-05-04"));
 
   const [todosByDate] = useState(dummyTodosByDate);
   const [remainingByDate] = useState(dummyRemainingByDate);
@@ -199,15 +197,10 @@ function FriendDetailPage() {
           <div className="friend-detail-page__calendar">
             {/* FriendCalendar에 날짜 변경 핸들러와 투두 데이터를 props로 전달
                 onDateChange: 캘린더에서 날짜 클릭 시 selectedDate 상태 업데이트
-                → selectedDate가 바뀌면 todos가 재계산되어 FriendTodo 목록이 갱신됨
-                onMonthChange: 월 이동 시 viewDate 상태 업데이트 */}
+                → selectedDate가 바뀌면 todos가 재계산되어 FriendTodo 목록이 갱신됨 */}
             <FriendCalendar
               initialDate={selectedDate}
               onDateChange={(date) => date && setSelectedDate(date)}
-              onMonthChange={(date) => {
-                if (!date) return;
-                setViewDate(date);
-              }}
               todosByDate={todosByDate}
               remainingByDate={remainingByDate}
             />
