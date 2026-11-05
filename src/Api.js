@@ -11,6 +11,13 @@ const api = axios.create({
 
 let refreshPromise = null;
 
+const validateContentType = (response) => {
+    const contentType = response.headers?.["content-type"] || "";
+    if(!contentType.includes("json")){
+        console.warn("JSON이 아닌 응답 Content-Type", contentType);
+    }
+};
+
 // refresh_token 쿠키로 새 Access Token을 발급받습니다.
 // 동시에 여러 요청이 401을 받아도 재발급 요청은 하나만 보냅니다.
 export const renewAccessToken = () => {
