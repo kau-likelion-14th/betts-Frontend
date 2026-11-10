@@ -1,16 +1,28 @@
-import React, { useMemo, useState } from "react";
-import TodoModal from "./TodoModal";
+import React, { useEffect, useState } from "react";
+import TodoModal, { getCategoryStyle } from "./TodoModal";
+import { get } from "../../Request";
+import config from "../../Config";
 import "../../styles/Todo.css";
 
-const Todo = ({ selectedDate, todosByDate, setTodosByDate }) => {
+const Todo = ({ todos = [], onToggleComplete, togglingId = null }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
 
-  const dateKey = useMemo(() => {
-    return selectedDate.toISOString().split("T")[0];
-  }, [selectedDate]);
+  // 서버에서 받은 카테고리 목록 ([{ categoryId, categoryName }])
+  const [serverCategories, setServerCategories] = useState([]);
 
-  const todos = todosByDate[dateKey] || [];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await get(config.CATEGORIES.GET);
+        setServerCategories(Array.isArray(response?.result) ? response.result : []);
+      } catch (error) {
+        console.error("카테고리 조회 실패:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleOpenAddModal = () => {
     setEditingTodo(null);
@@ -22,111 +34,71 @@ const Todo = ({ selectedDate, todosByDate, setTodosByDate }) => {
     setIsModalOpen(true);
   };
 
+  // Todo 추가·수정·삭제 API는 이번 과제 범위가 아니라서 아직 서버에 저장하지 않습니다.
   const handleSaveTodo = (todoData) => {
-    const currentTodos = todosByDate[dateKey] || [];
-
-    const exists = currentTodos.some((todo) => todo.id === todoData.id);
-
-    let updatedTodos;
-
-    if (exists) {
-      updatedTodos = currentTodos.map((todo) =>
-        todo.id === todoData.id ? todoData : todo
-      );
-    } else {
-      updatedTodos = [...currentTodos, todoData];
-    }
-
-    setTodosByDate({
-      ...todosByDate,
-      [dateKey]: updatedTodos,
-    });
-  };
-
-  const handleToggleCheck = (id) => {
-    const updatedTodos = todos.map((todo) =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    );
-
-    setTodosByDate({
-      ...todosByDate,
-      [dateKey]: updatedTodos,
-    });
+    console.info("Todo 저장은 다음 과제에서 API와 연결합니다.", todoData);
   };
 
   const handleDeleteTodo = (id) => {
-    const updatedTodos = todos.filter((todo) => todo.id !== id);
-
-    setTodosByDate({
-      ...todosByDate,
-      [dateKey]: updatedTodos,
-    });
-
+    console.info("Todo 삭제는 다음 과제에서 API와 연결합니다.", id);
     setEditingTodo(null);
     setIsModalOpen(false);
   };
 
-  const getCategoryLabel = (category) => {
-    switch (category) {
-      case "study":
-        return "공부";
-      case "exercise":
-        return "운동";
-      case "club":
-        return "동아리";
-      default:
-        return category;
-    }
-  };
-
   return (
-    <div className="todo-container">
-      <div className="todo-header">
-        <div className="todo-title">To do List</div>
-        <div className="todo-header-btns">
-          <span onClick={handleOpenAddModal}>＋</span>
+      <div className="todo-container">
+        <div className="todo-header">
+          <div className="todo-title">To do List</div>
+          <div className="todo-header-btns">
+            <span onClick={handleOpenAddModal}>＋</span>
+          </div>
         </div>
+
+        <div className="todo-list">
+          {todos.length === 0 ? (
+              <div className="todo-empty"> </div>
+          ) : (
+              todos.map((todo) => (
+                  <div className="todo-item" key={todo.id}>
+                    <div
+                        className={`checkbox ${todo.completed ? "checked" : ""}`}
+                        onClick={(e) => {
+                          // 체크박스 클릭이 수정 모달 열기로 번지지 않게 막습니다.
+                          e.stopPropagation();
+                          if (togglingId === null) onToggleComplete?.(todo);
+                        }}
+                        style={{ cursor: togglingId === null ? "pointer" : "wait" }}
+                    />
+
+                    <div
+                        className="todo-text"
+                        onClick={() => handleOpenEditModal(todo)}
+                        style={{
+                          textDecoration: todo.completed ? "line-through" : "none",
+                          opacity: todo.completed ? 0.5 : 1,
+                          cursor: "pointer",
+                        }}
+                    >
+                      {todo.text}
+                    </div>
+
+                    <div className="todo-category" style={getCategoryStyle(todo.category)}>
+                      {todo.category}
+                    </div>
+                  </div>
+              ))
+          )}
+        </div>
+
+        <TodoModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSaveTodo}
+            onDelete={handleDeleteTodo}
+            initialTodo={editingTodo}
+            categories={serverCategories}
+        />
       </div>
-
-      <div className="todo-list">
-        {todos.length === 0 ? (
-          <div className="todo-empty"> </div>
-        ) : (
-          todos.map((todo) => (
-            <div className="todo-item" key={todo.id}>
-              <div
-                className={`checkbox ${todo.completed ? "checked" : ""}`}
-                onClick={() => handleToggleCheck(todo.id)}
-              />
-
-              <div
-                className="todo-text"
-                onClick={() => handleOpenEditModal(todo)}
-                style={{
-                  textDecoration: todo.completed ? "line-through" : "none",
-                  opacity: todo.completed ? 0.5 : 1,
-                  cursor: "pointer",
-                }}
-              >
-                {todo.text}
-              </div>
-
-              <div className={`todo-category cat-${todo.category}`}>
-                {getCategoryLabel(todo.category)}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <TodoModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveTodo}
-        onDelete={handleDeleteTodo}
-        initialTodo={editingTodo}
-      />
-    </div>
   );
 };
 

@@ -2,25 +2,48 @@ import React, { useEffect, useState } from "react";
 import "../../styles/TodoModal.css";
 import RoutineModal from "./RoutineModal";
 
-const TodoModal = ({ isOpen, onClose, onSave, onDelete, initialTodo = null }) => {
+// 카테고리 이름별 색상 (서버 카테고리 이름 기준, 없는 이름은 기본색)
+const CATEGORY_COLORS = {
+  공부: "#E6F6F4",
+  운동: "#FFE5E5",
+  동아리: "#B6DAFF",
+  일상: "#FFC8BE",
+};
+
+export const getCategoryStyle = (name) => ({
+  backgroundColor: CATEGORY_COLORS[name] || "#FFF9C4",
+  color: "#333",
+});
+
+const TodoModal = ({
+                     isOpen,
+                     onClose,
+                     onSave,
+                     onDelete,
+                     initialTodo = null,
+                     categories = [],
+                   }) => {
   const [text, setText] = useState("");
-  const [category, setCategory] = useState("study");
+  const [category, setCategory] = useState("");
   const [isRoutineModalOpen, setIsRoutineModalOpen] = useState(false);
   const [routine, setRoutine] = useState(null);
+
+  // 서버 카테고리 중 첫 번째를 기본값으로 사용 (응답 전이면 빈 문자열)
+  const defaultCategory = categories[0]?.categoryName || "";
 
   useEffect(() => {
     if (!isOpen) return;
 
     if (initialTodo) {
       setText(initialTodo.text || "");
-      setCategory(initialTodo.category || "study");
+      setCategory(initialTodo.category || defaultCategory);
       setRoutine(initialTodo.routine || null);
     } else {
       setText("");
-      setCategory("study");
+      setCategory(defaultCategory);
       setRoutine(null);
     }
-  }, [isOpen, initialTodo]);
+  }, [isOpen, initialTodo, defaultCategory]);
 
   if (!isOpen) return null;
 
@@ -76,38 +99,24 @@ const TodoModal = ({ isOpen, onClose, onSave, onDelete, initialTodo = null }) =>
               <label>카테고리</label>
 
               <div className="modal-category-row">
-                <label className="modal-category-item study">
-                  <span>공부</span>
-                  <input
-                    type="radio"
-                    name="category"
-                    value="study"
-                    checked={category === "study"}
-                    onChange={(e) => setCategory(e.target.value)}
-                  />
-                </label>
-
-                <label className="modal-category-item exercise">
-                  <span>운동</span>
-                  <input
-                    type="radio"
-                    name="category"
-                    value="exercise"
-                    checked={category === "exercise"}
-                    onChange={(e) => setCategory(e.target.value)}
-                  />
-                </label>
-
-                <label className="modal-category-item club">
-                  <span>동아리</span>
-                  <input
-                    type="radio"
-                    name="category"
-                    value="club"
-                    checked={category === "club"}
-                    onChange={(e) => setCategory(e.target.value)}
-                  />
-                </label>
+                {categories.length === 0 ? (
+                    <span>카테고리를 불러오는 중...</span>
+                ) : (
+                    categories.map((item) => (
+                        <label key={item.categoryId} className="modal-category-item">
+                      <span style={getCategoryStyle(item.categoryName)}>
+                        {item.categoryName}
+                      </span>
+                          <input
+                              type="radio"
+                              name="category"
+                              value={item.categoryName}
+                              checked={category === item.categoryName}
+                              onChange={(e) => setCategory(e.target.value)}
+                          />
+                        </label>
+                    ))
+                )}
               </div>
             </div>
 

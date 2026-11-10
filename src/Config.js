@@ -32,6 +32,21 @@ const config = {
         ME: "/api/youtube/me",
         DELETE: (songId) => `/api/youtube/save/${songId}`,
     },
+
+    TODOS: {
+        LIST: "/api/todos",
+        CREATE: "/api/todos",
+        TOGGLE_COMPLETE: (todoId, date) =>
+            `/api/todos/${todoId}/dates/${date}/complete`,
+    },
+
+    CALENDAR: {
+        GET: "/api/todos/calendar",
+    },
+
+    CATEGORIES: {
+        GET: "/api/categories",
+    },
 };
 
 export default config;
