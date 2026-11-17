@@ -4,11 +4,20 @@ import { get } from "../../Request";
 import config from "../../Config";
 import "../../styles/Todo.css";
 
-const Todo = ({ todos = [], onToggleComplete, togglingId = null }) => {
+const Todo = ({
+                todos = [],
+                selectedDateKey,
+                togglingId = null,
+                onToggleComplete,
+                onLoadTodoDetail,
+                onCreateTodo,
+                onUpdateTodo,
+                onDeleteTodo,
+              }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
+  const [loadingDetailId, setLoadingDetailId] = useState(null);
 
-  // 서버에서 받은 카테고리 목록 ([{ categoryId, categoryName }])
   const [serverCategories, setServerCategories] = useState([]);
 
   useEffect(() => {
@@ -29,20 +38,50 @@ const Todo = ({ todos = [], onToggleComplete, togglingId = null }) => {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (todo) => {
-    setEditingTodo(todo);
+  const handleOpenEditModal = async (todo) => {
+    if (loadingDetailId !== null) return;
+    setLoadingDetailId(todo.id);
+
+    const detail = await onLoadTodoDetail?.(todo.id);
+    setLoadingDetailId(null);
+
+    if (!detail) return;
+
+    setEditingTodo({
+      id: todo.id,
+      completed: todo.completed,
+      text: detail.description ?? todo.text,
+      category: detail.categoryName ?? todo.category,
+      routineEnabled: detail.routineEnabled === true,
+      routine: detail.routineEnabled
+          ? {
+            startDate: detail.startDate ?? "",
+            endDate: detail.endDate ?? "",
+            week: detail.week ?? "",
+          }
+          : null,
+    });
     setIsModalOpen(true);
   };
 
-  // Todo 추가·수정·삭제 API는 이번 과제 범위가 아니라서 아직 서버에 저장하지 않습니다.
-  const handleSaveTodo = (todoData) => {
-    console.info("Todo 저장은 다음 과제에서 API와 연결합니다.", todoData);
+  const handleSaveTodo = async (todoData) => {
+    if (editingTodo) {
+      return (await onUpdateTodo?.(editingTodo.id, todoData)) === true;
+    }
+    return (await onCreateTodo?.(todoData)) === true;
   };
 
-  const handleDeleteTodo = (id) => {
-    console.info("Todo 삭제는 다음 과제에서 API와 연결합니다.", id);
-    setEditingTodo(null);
+  const handleDeleteTodo = async (id) => {
+    const ok = (await onDeleteTodo?.(id)) === true;
+    if (ok) {
+      setEditingTodo(null);
+      setIsModalOpen(false);
+    }
+  };
+
+  const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingTodo(null);
   };
 
   return (
@@ -63,7 +102,6 @@ const Todo = ({ todos = [], onToggleComplete, togglingId = null }) => {
                     <div
                         className={`checkbox ${todo.completed ? "checked" : ""}`}
                         onClick={(e) => {
-                          // 체크박스 클릭이 수정 모달 열기로 번지지 않게 막습니다.
                           e.stopPropagation();
                           if (togglingId === null) onToggleComplete?.(todo);
                         }}
@@ -76,7 +114,7 @@ const Todo = ({ todos = [], onToggleComplete, togglingId = null }) => {
                         style={{
                           textDecoration: todo.completed ? "line-through" : "none",
                           opacity: todo.completed ? 0.5 : 1,
-                          cursor: "pointer",
+                          cursor: loadingDetailId === todo.id ? "wait" : "pointer",
                         }}
                     >
                       {todo.text}
@@ -92,11 +130,12 @@ const Todo = ({ todos = [], onToggleComplete, togglingId = null }) => {
 
         <TodoModal
             isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            onClose={handleCloseModal}
             onSave={handleSaveTodo}
             onDelete={handleDeleteTodo}
             initialTodo={editingTodo}
             categories={serverCategories}
+            defaultStartDate={selectedDateKey}
         />
       </div>
   );

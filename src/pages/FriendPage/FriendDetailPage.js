@@ -130,8 +130,6 @@ function FriendDetailPage() {
       }
       : null;
 
-  const latestSong = null;
-
   const remainingByDate = useMemo(() => {
     const result = {};
     (calendar.value?.days || []).forEach((day) => {

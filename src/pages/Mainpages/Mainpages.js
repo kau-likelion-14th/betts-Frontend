@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import CustomCalendar from "./Calendar";
 import Todo from "./Todo";
-import { get, patch } from "../../Request";
+import { get, post, put, patch, del } from "../../Request";
 import config from "../../Config";
 import "../../styles/Mainpage.css";
 
-// Date 객체를 "YYYY-MM-DD" 문자열로 변환합니다.
 const toDateKey = (date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -13,26 +12,34 @@ const toDateKey = (date) => {
   return `${y}-${m}-${d}`;
 };
 
+const toTodoRequestBody = ({ text, category, routine }) => ({
+  categoryName: category,
+  description: text,
+  routineEnabled: Boolean(routine),
+  startDate: routine?.startDate || null,
+  endDate: routine?.endDate || null,
+  week: routine?.week || null,
+});
+
+const getErrorMessage = (error, fallback) =>
+    error?.response?.data?.message ?? fallback;
+
 const MainPage = () => {
-  // 선택한 날짜 (Todo 목록 조회 기준)
   const [selectedDate, setSelectedDate] = useState(() => new Date());
-  // 캘린더에 보이는 달 (캘린더 조회 기준)
   const [viewDate, setViewDate] = useState(() => new Date());
 
-  // 서버에서 받은 데이터
   const [todos, setTodos] = useState([]);
   const [remainingByDate, setRemainingByDate] = useState({});
 
-  // 완료 상태 변경 후 Todo 목록과 캘린더를 다시 조회하기 위한 값
   const [refreshKey, setRefreshKey] = useState(0);
-  // 완료 상태 변경 요청 중인 Todo id (중복 클릭 방지)
   const [togglingId, setTogglingId] = useState(null);
 
   const dateKey = toDateKey(selectedDate);
   const year = viewDate.getFullYear();
-  const month = viewDate.getMonth() + 1; // getMonth()는 0부터 시작
+  const month = viewDate.getMonth() + 1;
 
-  // 캘린더 조회: 달이 바뀌거나 refreshKey가 바뀌면 다시 조회
+  const refresh = () => setRefreshKey((prev) => prev + 1);
+
   useEffect(() => {
     let active = true;
 
@@ -43,8 +50,6 @@ const MainPage = () => {
             ? response.result.days
             : [];
 
-        // { "2026-11-07": 2, "2026-11-08": 0 } 형태로 변환
-        // Todo가 없는 날짜(hasTodo: false)는 넣지 않아서 0과 구분합니다.
         const next = {};
         days.forEach((day) => {
           if (day.hasTodo) {
@@ -65,7 +70,6 @@ const MainPage = () => {
     };
   }, [year, month, refreshKey]);
 
-  // 날짜별 Todo 조회: 날짜가 바뀌거나 refreshKey가 바뀌면 다시 조회
   useEffect(() => {
     let active = true;
 
@@ -74,7 +78,6 @@ const MainPage = () => {
         const response = await get(config.TODOS.LIST, { date: dateKey });
         const list = Array.isArray(response?.result) ? response.result : [];
 
-        // 서버 필드명을 화면에서 쓰는 이름으로 변환
         const mapped = list.map((todo) => ({
           id: todo.todoId,
           text: todo.description,
@@ -95,7 +98,6 @@ const MainPage = () => {
     };
   }, [dateKey, refreshKey]);
 
-  // 체크박스 클릭: 서버에 완료 상태 변경 요청 → 성공하면 다시 조회
   const handleToggleComplete = async (todo) => {
     if (togglingId !== null) return;
     setTogglingId(todo.id);
@@ -110,14 +112,86 @@ const MainPage = () => {
         throw new Error("완료 상태 변경 실패");
       }
 
-      // 성공했을 때만 Todo 목록과 캘린더를 다시 조회합니다.
-      setRefreshKey((prev) => prev + 1);
+      refresh();
     } catch (error) {
-      // 실패하면 화면 상태를 바꾸지 않습니다.
       console.error("완료 상태 변경 실패:", error);
-      alert("완료 상태 변경에 실패했습니다. 다시 시도해 주세요.");
+      alert(getErrorMessage(error, "완료 상태 변경에 실패했습니다. 다시 시도해 주세요."));
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleLoadTodoDetail = async (todoId) => {
+    try {
+      const response = await get(config.TODOS.DETAIL(todoId));
+
+      if (response?.isSuccess === false || !response?.result) {
+        throw new Error("상세 조회 실패");
+      }
+
+      return response.result;
+    } catch (error) {
+      console.error("Todo 상세 조회 실패:", error);
+      alert(getErrorMessage(error, "할 일 정보를 불러오지 못했습니다."));
+      return null;
+    }
+  };
+
+  const handleCreateTodo = async (todoData) => {
+    try {
+      const response = await post(
+          config.TODOS.CREATE,
+          toTodoRequestBody(todoData),
+          { params: { date: dateKey } }
+      );
+
+      if (response?.isSuccess === false) {
+        throw new Error("Todo 생성 실패");
+      }
+
+      refresh();
+      return true;
+    } catch (error) {
+      console.error("Todo 생성 실패:", error);
+      alert(getErrorMessage(error, "할 일 추가에 실패했습니다. 다시 시도해 주세요."));
+      return false;
+    }
+  };
+
+  const handleUpdateTodo = async (todoId, todoData) => {
+    try {
+      const response = await put(
+          config.TODOS.UPDATE(todoId),
+          toTodoRequestBody(todoData)
+      );
+
+      if (response?.isSuccess === false) {
+        throw new Error("Todo 수정 실패");
+      }
+
+      refresh();
+      return true;
+    } catch (error) {
+      console.error("Todo 수정 실패:", error);
+      alert(getErrorMessage(error, "할 일 수정에 실패했습니다. 다시 시도해 주세요."));
+      return false;
+    }
+  };
+
+  const handleDeleteTodo = async (todoId) => {
+    try {
+      const response = await del(config.TODOS.DELETE(todoId, dateKey));
+
+      if (response?.isSuccess === false) {
+        throw new Error("Todo 삭제 실패");
+      }
+
+      refresh();
+      return true;
+    } catch (error) {
+      console.error("Todo 삭제 실패:", error);
+      alert(getErrorMessage(error, "할 일 삭제에 실패했습니다. 다시 시도해 주세요."));
+      return false;
     }
   };
 
@@ -131,8 +205,13 @@ const MainPage = () => {
         />
         <Todo
             todos={todos}
-            onToggleComplete={handleToggleComplete}
+            selectedDateKey={dateKey}
             togglingId={togglingId}
+            onToggleComplete={handleToggleComplete}
+            onLoadTodoDetail={handleLoadTodoDetail}
+            onCreateTodo={handleCreateTodo}
+            onUpdateTodo={handleUpdateTodo}
+            onDeleteTodo={handleDeleteTodo}
         />
       </div>
   );
