@@ -58,6 +58,7 @@
     justify-content: flex-start;
     gap: 8px;
     background: transparent;
+    color: #000000;
 }
 
 .calendar-container .react-calendar__tile abbr {
@@ -110,6 +111,7 @@
 .calendar-container .react-calendar__tile--active:enabled:hover,
 .calendar-container .react-calendar__tile--active:enabled:focus {
     background: transparent;
+    color: #000000;
 }
 
 .calendar-container .react-calendar__tile--active abbr {
