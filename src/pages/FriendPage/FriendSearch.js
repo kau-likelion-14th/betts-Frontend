@@ -4,7 +4,6 @@ import config from "../../Config";
 import { toFriendModel } from "./friendModel";
 import "../../styles/FriendSearch.css";
 
-// TODO ①: 검색 API 요청
 function requestSearch(nickname, page, signal) {
     return api.get(config.FOLLOW.SEARCH, {
         params: {
@@ -36,14 +35,6 @@ function FriendSearch({
     const nickname = query.trim();
 
     useEffect(() => {
-        if (!nickname) {
-            setResults([]);
-            setTotalPages(0);
-            setError("");
-            setLoading(false);
-            return;
-        }
-
         let active = true;
         const controller = new AbortController();
 
@@ -70,7 +61,6 @@ function FriendSearch({
 
                 if (!active) return;
 
-                // 팔로우로 마지막 페이지가 사라졌다면 유효한 페이지로 이동합니다.
                 if (page > 0 && page >= data.result.totalPages) {
                     setPage(Math.max(0, data.result.totalPages - 1));
                     return;
@@ -80,12 +70,16 @@ function FriendSearch({
                 setTotalPages(data.result.totalPages);
             } catch {
                 if (active) {
-                    setError("검색에 실패했습니다. 다시 시도해 주세요.");
+                    setError(
+                        nickname
+                            ? "검색에 실패했습니다. 다시 시도해 주세요."
+                            : "팔로우 가능한 목록을 불러오지 못했습니다."
+                    );
                 }
             } finally {
                 if (active) setLoading(false);
             }
-        }, 300);
+        }, nickname ? 300 : 0);
 
         return () => {
             active = false;
@@ -97,8 +91,6 @@ function FriendSearch({
     const handleChange = (event) => {
         const nextQuery = event.target.value;
         setQuery(nextQuery);
-        // 새 검색을 기다리는 동안 예전 결과의 버튼을 누르지 않게 합니다.
-        // 앞뒤 공백만 바뀌어 검색어가 같다면 현재 결과를 유지합니다.
         if (nextQuery.trim() !== nickname) {
             setPage(0);
             setResults([]);
@@ -122,10 +114,8 @@ function FriendSearch({
 
             {followError && <p role="alert">{followError}</p>}
 
-            {!nickname ? (
-                <p>검색할 닉네임을 입력해 주세요.</p>
-            ) : loading ? (
-                <p role="status">검색 중...</p>
+            {loading ? (
+                <p role="status">{nickname ? "검색 중..." : "불러오는 중..."}</p>
             ) : error ? (
                 <div>
                     <p role="alert">{error}</p>
@@ -137,7 +127,9 @@ function FriendSearch({
                     </button>
                 </div>
             ) : results.length === 0 ? (
-                <p>검색 결과가 없습니다.</p>
+                <p className="friend-search__empty">
+                    {nickname ? "검색 결과가 없습니다." : "팔로우 가능한 친구가 없습니다."}
+                </p>
             ) : (
                 <ul className="friend-search__list">
                     {results.map((user) => {
@@ -176,7 +168,7 @@ function FriendSearch({
                 </ul>
             )}
 
-            {nickname && !loading && !error && totalPages > 1 && (
+            {!loading && !error && totalPages > 1 && (
                 <div>
                     <button
                         type="button"

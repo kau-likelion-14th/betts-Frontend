@@ -13,14 +13,12 @@ function LoginPage() {
 
     const isCallback = location.pathname === CALLBACK_PATH;
 
-    // 이미 로그인했다면 로그인 화면 대신 메인으로 보냅니다.
     useEffect(() => {
         if (!isCallback && localStorage.getItem('accessToken')) {
             navigate('/', { replace: true });
         }
     }, [isCallback, navigate]);
 
-    // 카카오가 돌려준 인가 코드로 백엔드 로그인을 요청합니다.
     useEffect(() => {
         if (!isCallback) return;
 
@@ -37,7 +35,6 @@ function LoginPage() {
             return;
         }
 
-        // 인가 코드는 한 번만 사용할 수 있으므로 중복 요청을 막습니다.
         if (onceRef.current) return;
 
         const expectedState = sessionStorage.getItem('kakaoOAuthState');
@@ -70,7 +67,6 @@ function LoginPage() {
             });
     }, [isCallback, location.search, navigate]);
 
-    // 카카오 로그인 화면으로 이동합니다.
     const handleClick = () => {
         const restKey = process.env.REACT_APP_KAKAO_REST_API_KEY;
         const redirectUri = `${window.location.origin}${CALLBACK_PATH}`;
@@ -100,15 +96,16 @@ function LoginPage() {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            height: '100vh',
-            backgroundColor: '#1a1a2e'
+            minHeight: '100vh',
+            backgroundColor: '#F5F6F8'
         }}>
             <section style={{
                 background: 'white',
                 borderRadius: '20px',
                 padding: '60px 48px',
                 textAlign: 'center',
-                width: '340px'
+                width: '340px',
+                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08)'
             }}>
                 <div style={{ fontSize: '52px', fontWeight: '800', marginBottom: '8px', letterSpacing: '-2px' }}>
                     <span style={{ color: '#FF6B00' }}>L</span>
