@@ -1,14 +1,50 @@
 import "../styles/header.css";
-import logo from "../assets/image/logo.png"
-import LogoutIcon from "../assets/icon/logout.png"
-import { NavLink } from "react-router-dom";
+import logo from "../assets/image/logo.png";
+import LogoutIcon from "../assets/icon/logout.png";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import api from "../Api";
+import config from "../Config";
 
-function header(){
-    return(
+function Header() {
+    const navigate = useNavigate();
+    const [loggingOut, setLoggingOut] = useState(false);
+
+    // 로그인할 때 저장한 사용자 정보에서 이름을 꺼냅니다.
+    let userName = "";
+    try {
+        userName = JSON.parse(localStorage.getItem("user") || "null")?.username || "";
+    } catch {
+        userName = "";
+    }
+
+    const handleLogout = async () => {
+        if (loggingOut) return;
+        setLoggingOut(true);
+
+        try {
+            const { data } = await api.post(config.AUTH.LOGOUT, {});
+
+            if (data?.isSuccess === false) {
+                throw new Error("로그아웃 실패");
+            }
+
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+            window.dispatchEvent(new Event("auth:changed"));
+            navigate("/login", { replace: true });
+        } catch {
+            alert("로그아웃에 실패했습니다.");
+        } finally {
+            setLoggingOut(false);
+        }
+    };
+
+    return (
         <header className="header">
             {/*로고*/}
             <div className="header-left">
-                <img src={logo} alt="LTE 로고" className="header-logo"/>
+                <img src={logo} alt="LTE 로고" className="header-logo" />
                 <span className="header-title">Lion To-do Everyday</span>
             </div>
 
@@ -29,13 +65,18 @@ function header(){
 
             <div className="header-right">
                 <span className="user-name">
-                    김민수님
+                    {userName ? `${userName}님` : ""}
                 </span>
-                <img src={LogoutIcon} alt="로그아웃" className="Logout-icon"></img>
+                <img
+                    src={LogoutIcon}
+                    alt="로그아웃"
+                    className="Logout-icon"
+                    onClick={handleLogout}
+                    style={{ cursor: loggingOut ? "default" : "pointer" }}
+                />
             </div>
         </header>
     );
-
 }
 
-export default header;
+export default Header;
