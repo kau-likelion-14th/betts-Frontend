@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../Api";
 import config from "../../Config";
 import { toFriendModel } from "./friendModel";
+import searchIcon from "../../assets/icon/search.png";
+import "../../styles/FriendList.css";
 import "../../styles/FriendSearch.css";
 
 function requestSearch(nickname, page, signal) {
@@ -16,6 +19,8 @@ function requestSearch(nickname, page, signal) {
 }
 
 function FriendSearch({
+                          title = "팔로우 요청",
+                          placeholder = "이름/태그로 검색",
                           onFollow,
                           followingList = [],
                           followingId = null,
@@ -23,6 +28,8 @@ function FriendSearch({
                           followDisabled = false,
                           refreshKey = 0,
                       }) {
+    const navigate = useNavigate();
+
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(0);
     const [retryCount, setRetryCount] = useState(0);
@@ -98,15 +105,27 @@ function FriendSearch({
         }
     };
 
+    const goFriendDetail = (user) => {
+        navigate(`/friends/${user.id}`, { state: { friend: user } });
+    };
+
     return (
         <section className="friend-search">
-            <h2 className="friend-search__title">팔로우 요청</h2>
+            <h2 className="friend-search__title">{title}</h2>
 
             <div className="friend-search__input-box">
+                <span className="friend-search__icon" aria-hidden="true">
+                    <img
+                        src={searchIcon}
+                        alt=""
+                        className="friend-search__icon-img"
+                    />
+                </span>
+
                 <input
                     className="friend-search__input"
-                    aria-label="닉네임 검색"
-                    placeholder="닉네임으로 검색"
+                    aria-label="이름 또는 태그 검색"
+                    placeholder={placeholder}
                     value={query}
                     onChange={handleChange}
                 />
@@ -115,9 +134,11 @@ function FriendSearch({
             {followError && <p role="alert">{followError}</p>}
 
             {loading ? (
-                <p role="status">{nickname ? "검색 중..." : "불러오는 중..."}</p>
+                <div className="friend-search__empty" role="status">
+                    {nickname ? "검색 중..." : "불러오는 중..."}
+                </div>
             ) : error ? (
-                <div>
+                <div className="friend-search__empty">
                     <p role="alert">{error}</p>
                     <button
                         type="button"
@@ -127,9 +148,9 @@ function FriendSearch({
                     </button>
                 </div>
             ) : results.length === 0 ? (
-                <p className="friend-search__empty">
+                <div className="friend-search__empty">
                     {nickname ? "검색 결과가 없습니다." : "팔로우 가능한 친구가 없습니다."}
-                </p>
+                </div>
             ) : (
                 <ul className="friend-search__list">
                     {results.map((user) => {
@@ -137,28 +158,59 @@ function FriendSearch({
                             (friend) => friend.id === user.id
                         );
                         const isPending = followingId === user.id;
+                        const isDisabled =
+                            isFollowing || followingId !== null || followDisabled;
 
                         return (
                             <li key={user.id} className="friend-search__item">
-                                <div className="friend-info">
-                                    <div className="friend-info__top">
-                                        <span className="friend-info__name">{user.name}</span>
-                                        {user.tag && (
-                                            <span className="friend-info__tag">#{user.tag}</span>
+                                <div
+                                    className="friend-search__left"
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => goFriendDetail(user)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter" || event.key === " ") {
+                                            event.preventDefault();
+                                            goFriendDetail(user);
+                                        }
+                                    }}
+                                >
+                                    <div className="friend-avatar" aria-hidden="true">
+                                        {user.profileImageUrl ? (
+                                            <img
+                                                className="friend-avatar__img"
+                                                src={user.profileImageUrl}
+                                                alt=""
+                                            />
+                                        ) : (
+                                            <UserIcon />
                                         )}
                                     </div>
-                                    <p>{user.bio || "소개글이 없습니다."}</p>
+
+                                    <div className="friend-info">
+                                        <div className="friend-info__top">
+                                            <span className="friend-info__name">{user.name}</span>
+                                            {user.tag && (
+                                                <span className="friend-info__tag">#{user.tag}</span>
+                                            )}
+                                        </div>
+
+                                        {user.bio ? (
+                                            <div className="friend-info__bio">{user.bio}</div>
+                                        ) : (
+                                            <div className="friend-info__empty">소개글이 없습니다.</div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <button
                                     type="button"
-                                    className="friend-follow-btn"
-                                    disabled={
-                                        isFollowing ||
-                                        followingId !== null ||
-                                        followDisabled
-                                    }
-                                    onClick={() => onFollow?.(user)}
+                                    className={`friend-follow-btn ${isDisabled ? "is-disabled" : ""}`}
+                                    disabled={isDisabled}
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        onFollow?.(user);
+                                    }}
                                 >
                                     {isPending ? "처리 중..." : isFollowing ? "팔로잉" : "팔로우"}
                                 </button>
@@ -188,6 +240,24 @@ function FriendSearch({
                 </div>
             )}
         </section>
+    );
+}
+
+function UserIcon() {
+    return (
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+                d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5Z"
+                fill="#ffffff"
+                opacity="0.9"
+            />
+            <path
+                d="M4 22c0-4.418 3.582-8 8-8s8 3.582 8 8"
+                stroke="#ffffff"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+        </svg>
     );
 }
 
